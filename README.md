@@ -13,6 +13,7 @@ $ python .\src\logging-service.py
 $ python .\src\messages-service.py
 $ python .\src\facade-service.py
 ```
+### Project Testing
 Then, to test the microservice, run `test.py` script, it will consecutively make two POST and two GET requests:
 ```shell
 $ python .\test.py
