@@ -29,25 +29,15 @@ def handle_get():
     
     all_logs = []
     
-    # LOGGING_SERVICE_URL = random.choice(LOGGING_SERVICE_URLS)
-    # try:
-    #     log_response = requests.get(LOGGING_SERVICE_URL)
-    #     if log_response.status_code != 200:
-    #         return jsonify({'error': 'logging service error'}), 500
-    #     log_data = log_response.json()
-    #     all_logs.extend(list(log_data))
-    # except requests.exceptions.RequestException:
-    #     return jsonify({'error': 'logging service unavailable'}), 503
-
-    all_logs = []
-    for LOGGING_SERVICE_URL in LOGGING_SERVICE_URLS:
+    LOGGING_SERVICE_URL = random.choice(LOGGING_SERVICE_URLS)
+    try:
         log_response = requests.get(LOGGING_SERVICE_URL)
-        if log_response.status_code == 200:
-            log_data = log_response.json()
-            all_logs.extend(list(log_data))
-            break
-        else:
-            continue
+        if log_response.status_code != 200:
+            return jsonify({'error': 'logging service error'}), 500
+        log_data = log_response.json()
+        all_logs.extend(list(log_data))
+    except requests.exceptions.RequestException:
+        return jsonify({'error': 'logging service unavailable'}), 503
 
     try:
         message_response = requests.get(MESSAGES_SERVICE_URL)
