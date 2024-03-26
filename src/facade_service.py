@@ -2,11 +2,14 @@ from flask import Flask, request, jsonify
 import requests
 import uuid
 import random
+import hazelcast
 
 app = Flask(__name__)
 
+client = hazelcast.HazelcastClient()
+
 LOGGING_SERVICE_URLS = ['http://localhost:5001/log', 'http://localhost:5002/log', 'http://localhost:5003/log']
-MESSAGES_SERVICE_URL = "http://localhost:5004/message"
+MESSAGES_SERVICE_URLS = ['http://localhost:5004/message', 'http://localhost:5005/message'] 
 
 @app.route('/facade', methods=['POST'])
 def handle_post():
@@ -15,6 +18,14 @@ def handle_post():
     data = request.json
     message_id = uuid.uuid4().hex
     msg = data['msg']
+
+    queue = client.get_queue('message_queue').blocking()
+    
+    try:
+        queue.put({'msg': msg, 'uuid': message_id})
+    except Exception as e:
+        return jsonify({'error': 'Failed to enqueue message'}), 503
+    
     LOGGING_SERVICE_URL = random.choice(LOGGING_SERVICE_URLS)
     try:
         response = requests.post(LOGGING_SERVICE_URL, json={'msg': msg, 'uuid': message_id})
@@ -22,6 +33,7 @@ def handle_post():
             return jsonify({'error': 'logging service error'}), 500
     except requests.exceptions.RequestException as e:
         return jsonify({'error': 'Logging service unavailable'}), 503
+
     return jsonify({'uuid': message_id}), 200
 
 @app.route('/facade', methods=['GET'])
@@ -39,6 +51,7 @@ def handle_get():
     except requests.exceptions.RequestException:
         return jsonify({'error': 'logging service unavailable'}), 503
 
+    MESSAGES_SERVICE_URL = random.choice(MESSAGES_SERVICE_URLS)
     try:
         message_response = requests.get(MESSAGES_SERVICE_URL)
         if message_response.status_code != 200:

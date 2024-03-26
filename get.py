@@ -1,5 +1,4 @@
 import requests
-import time
 
 FACADE_SERVICE_URL = 'http://localhost:5000/facade'
 
